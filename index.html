@@ -8,9 +8,9 @@
     body {
         margin: 0;
         font-family: "Space Mono", monospace;
-        overflow: hidden;
         background: radial-gradient(circle at top right, rgba(40,0,80,0.6), rgba(0,40,80,0.6) 50%, #000 100%);
         color: white;
+        overflow-y: auto; /* Allow vertical scrolling */
     }
     .starfield {
         position: fixed;
@@ -44,7 +44,7 @@
         background: rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(12px);
         width: 360px;
-        margin: 60px auto;
+        margin: 60px auto 120px auto; /* Added bottom margin for scroll */
         padding: 25px;
         border-radius: 20px;
         border: 2px solid rgba(255,255,255,0.2);
