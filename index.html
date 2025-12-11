@@ -1,59 +1,199 @@
-<div>Teachable Machine Image Model</div>
-<button type="button" onclick="init()">Start</button>
-<div id="webcam-container"></div>
-<div id="label-container"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Posture Checker</title>
+<style>
+    /* ===== Global Styles ===== */
+    body {
+        margin: 0;
+        font-family: "Space Mono", monospace;
+        overflow: hidden;
+        background: radial-gradient(circle at top right, rgba(0, 255, 255, 0.25), rgba(255, 0, 0, 0.35) 60%, #000 100%);
+        color: white;
+    }
+
+    /* ===== Starfield + Comets ===== */
+    .starfield {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        background: transparent;
+        z-index: -1;
+    }
+
+    @keyframes comet {
+        0% { transform: translate(-10%, -10%) scale(0.2); opacity: 0; }
+        10% { opacity: 1; }
+        100% { transform: translate(120%, 120%) scale(1.5); opacity: 0; }
+    }
+
+    .comet {
+        position: absolute;
+        width: 4px; height: 4px;
+        background: white;
+        border-radius: 50%;
+        box-shadow: 0 0 8px 4px teal;
+        animation: comet 5s linear;
+    }
+
+    /* ===== Title ===== */
+    h1 {
+        text-align: center;
+        font-size: 2.2em;
+        margin-top: 40px;
+        letter-spacing: 4px;
+        text-shadow: 0 0 12px rgba(255,255,255,0.8);
+    }
+
+    /* Floating Stars Animation */
+    .floating-stars {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        animation: floatStars 20s linear infinite;
+    }
+
+    @keyframes floatStars {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-200px); }
+    }
+
+    /* ===== Control Panel Card ===== */
+    .panel {
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(12px);
+        width: 340px;
+        margin: 60px auto;
+        padding: 25px;
+        border-radius: 20px;
+        border: 2px solid rgba(255,255,255,0.2);
+        box-shadow: 0 0 25px rgba(0, 200, 255, 0.25);
+        text-align: center;
+    }
+
+    /* ===== Start Button ===== */
+    button {
+        background: transparent;
+        border: 2px solid teal;
+        padding: 10px 25px;
+        font-size: 1.1em;
+        color: white;
+        border-radius: 12px;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 0 12px teal;
+    }
+    button:hover {
+        background: teal;
+        box-shadow: 0 0 18px red;
+    }
+
+    /* ===== Prediction Labels ===== */
+    #label-container div {
+        margin-top: 8px;
+        padding: 6px;
+        border-radius: 10px;
+        font-size: 1.05em;
+    }
+
+    .good { border-left: 6px solid #00ff9d; }
+    .bad { border-left: 6px solid #ff4343; }
+    .neutral { border-left: 6px solid #ffe066; }
+
+    .indicator {
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    .indicator.good { background: #00ff9d; }
+    .indicator.bad { background: #ff4343; }
+    .indicator.neutral { background: #ffe066; }
+
+</style>
+</head>
+<body>
+
+<div class="starfield" id="starfield"></div>
+
+<h1>Posture Checker</h1>
+
+<div class="panel">
+    <button type="button" onclick="init()">Start</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-<script type="text/javascript">
-    // More API functions here:
-    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+<script>
+    /* ===== Comet Spawner ===== */
+    function spawnComet() {
+        const comet = document.createElement("div");
+        comet.classList.add("comet");
+        comet.style.top = Math.random() * window.innerHeight + "px";
+        comet.style.left = Math.random() * window.innerWidth + "px";
+        document.getElementById("starfield").appendChild(comet);
+        setTimeout(() => comet.remove(), 5000);
+    }
 
-    // the link to your model provided by Teachable Machine export panel
+    setInterval(spawnComet, 25000);
+
+    /* ===== Teachable Machine Code ===== */
     const URL = "./my_model/";
-
     let model, webcam, labelContainer, maxPredictions;
 
-    // Load the image model and setup the webcam
     async function init() {
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
 
-        // load the model and metadata
-        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-        // or files from your local hard drive
-        // Note: the pose library adds "tmImage" object to your window (window.tmImage)
         model = await tmImage.load(modelURL, metadataURL);
         maxPredictions = model.getTotalClasses();
 
-        // Convenience function to setup a webcam
-        const flip = true; // whether to flip the webcam
-        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-        await webcam.setup(); // request access to the webcam
+        const flip = true;
+        webcam = new tmImage.Webcam(200, 200, flip);
+        await webcam.setup();
         await webcam.play();
         window.requestAnimationFrame(loop);
 
-        // append elements to the DOM
         document.getElementById("webcam-container").appendChild(webcam.canvas);
         labelContainer = document.getElementById("label-container");
-        for (let i = 0; i < maxPredictions; i++) { // and class labels
-            labelContainer.appendChild(document.createElement("div"));
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const div = document.createElement("div");
+            labelContainer.appendChild(div);
         }
     }
 
     async function loop() {
-        webcam.update(); // update the webcam frame
+        webcam.update();
         await predict();
         window.requestAnimationFrame(loop);
     }
 
-    // run the webcam image through the image model
     async function predict() {
-        // predict can take in an image, video or canvas html element
         const prediction = await model.predict(webcam.canvas);
-        for (let i = 0; i < maxPredictions; i++) {
-            const classPrediction =
-                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
-            labelContainer.childNodes[i].innerHTML = classPrediction;
+
+        for (let i = 0; i < prediction.length; i++) {
+            const className = prediction[i].className;
+            const prob = prediction[i].probability.toFixed(2);
+            let statusClass = "neutral";
+
+            if (className.toLowerCase().includes("good")) statusClass = "good";
+            if (className.toLowerCase().includes("bad")) statusClass = "bad";
+
+            labelContainer.childNodes[i].innerHTML = `
+                <span class="indicator ${statusClass}"></span>
+                ${className}: ${prob}
+            `;
+            labelContainer.childNodes[i].className = statusClass;
         }
     }
 </script>
+</body>
+</html>
