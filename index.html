@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Posture Checker</title>
 <style>
-    /* ===== Global Styles ===== */
     body {
         margin: 0;
         font-family: "Space Mono", monospace;
@@ -13,8 +12,6 @@
         background: radial-gradient(circle at top right, rgba(40,0,80,0.6), rgba(0,40,80,0.6) 50%, #000 100%);
         color: white;
     }
-
-    /* ===== Starfield + Comets ===== */
     .starfield {
         position: fixed;
         top: 0; left: 0;
@@ -23,13 +20,11 @@
         background: transparent;
         z-index: -1;
     }
-
     @keyframes comet {
         0% { transform: translate(-10%, -10%) scale(0.2); opacity: 0; }
         10% { opacity: 1; }
         100% { transform: translate(120%, 120%) scale(1.5); opacity: 0; }
     }
-
     .comet {
         position: absolute;
         width: 4px; height: 4px;
@@ -38,8 +33,6 @@
         box-shadow: 0 0 8px 4px teal;
         animation: comet 5s linear;
     }
-
-    /* ===== Title ===== */
     h1 {
         text-align: center;
         font-size: 2.2em;
@@ -47,26 +40,10 @@
         letter-spacing: 4px;
         text-shadow: 0 0 12px rgba(255,255,255,0.8);
     }
-
-    /* Floating Stars Animation */
-    .floating-stars {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        pointer-events: none;
-        animation: floatStars 20s linear infinite;
-    }
-
-    @keyframes floatStars {
-        0% { transform: translateY(0); }
-        100% { transform: translateY(-200px); }
-    }
-
-    /* ===== Control Panel Card ===== */
     .panel {
         background: rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(12px);
-        width: 340px;
+        width: 360px;
         margin: 60px auto;
         padding: 25px;
         border-radius: 20px;
@@ -74,8 +51,6 @@
         box-shadow: 0 0 25px rgba(0, 200, 255, 0.25);
         text-align: center;
     }
-
-    /* ===== Start Button ===== */
     button {
         background: transparent;
         border: 2px solid teal;
@@ -92,19 +67,15 @@
         background: teal;
         box-shadow: 0 0 18px red;
     }
-
-    /* ===== Prediction Labels ===== */
     #label-container div {
         margin-top: 8px;
         padding: 6px;
         border-radius: 10px;
         font-size: 1.05em;
     }
-
     .good { border-left: 6px solid #00ff9d; }
     .bad { border-left: 6px solid #ff4343; }
     .neutral { border-left: 6px solid #ffe066; }
-
     .indicator {
         width: 12px; height: 12px;
         border-radius: 50%;
@@ -114,34 +85,34 @@
     .indicator.good { background: #00ff9d; }
     .indicator.bad { background: #ff4343; }
     .indicator.neutral { background: #ffe066; }
-
 </style>
 </head>
 <body>
 
 <div class="starfield" id="starfield"></div>
-
 <h1>Posture Checker</h1>
 
 <div class="panel">
     <h2>How to Use</h2>
     <p>1. Click the Start button below.<br>
-       2. Allow the webpage to access your webcam.<br>
-       3. Sit where your upper body is visible on camera.<br>
-       4. The AI will classify your posture as Good, Bad, or Neutral in real time.</p>
+       2. Allow webcam access.<br>
+       3. Sit where your upper body is visible.<br>
+       4. The AI will classify your posture in real time.</p>
+
     <h3>What This Project Does</h3>
     <p>This AI posture checker uses a Teachable Machine pose model to help users improve posture anywhere—at school, home, or even in bed. It identifies three posture classes: Good, Bad, and Neutral/Undetected.</p>
 
     <h3>The Problem</h3>
-    <p>Many students and everyday computer users spend long periods working on devices, which often leads to slouching, neck strain, and back discomfort. Poor posture can affect long-term health, comfort, and even focus. However, most people don’t realize when they begin to slouch.</p>
+    <p>Many students and computer users spend long periods working on devices, leading to slouching, neck strain, and back discomfort. Poor posture affects focus, comfort, and long-term health, but most people don’t notice when they begin to slouch.</p>
 
     <h3>Who Benefits</h3>
-    <p>This tool helps anyone who uses a computer or mobile device for long periods. It is especially helpful for:
-        <br>• Students working on Chromebooks or homework
-        <br>• People who study or work from home
-        <br>• Users who want instant posture reminders
-        <br>• Anyone hoping to build healthier posture habits in daily life
+    <p>This tool helps anyone who uses a computer for long periods, especially:<br>
+        • Students working on Chromebooks<br>
+        • People studying or working from home<br>
+        • Users who want instant posture reminders<br>
+        • Anyone trying to build healthier posture habits
     </p>
+
     <button type="button" onclick="init()">Start</button>
     <div id="webcam-container"></div>
     <div id="label-container"></div>
@@ -150,68 +121,63 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 <script>
-    /* ===== Comet Spawner ===== */
-    function spawnComet() {
-        const comet = document.createElement("div");
-        comet.classList.add("comet");
-        comet.style.top = Math.random() * window.innerHeight + "px";
-        comet.style.left = Math.random() * window.innerWidth + "px";
-        document.getElementById("starfield").appendChild(comet);
-        setTimeout(() => comet.remove(), 5000);
+function spawnComet() {
+    const comet = document.createElement("div");
+    comet.classList.add("comet");
+    comet.style.top = Math.random() * window.innerHeight + "px";
+    comet.style.left = Math.random() * window.innerWidth + "px";
+    document.getElementById("starfield").appendChild(comet);
+    setTimeout(() => comet.remove(), 5000);
+}
+setInterval(spawnComet, 25000);
+
+const URL = "./my_model/";
+let model, webcam, labelContainer, maxPredictions;
+
+async function init() {
+    const modelURL = URL + "model.json";
+    const metadataURL = URL + "metadata.json";
+
+    model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
+
+    const flip = true;
+    webcam = new tmImage.Webcam(200, 200, flip);
+    await webcam.setup();
+    await webcam.play();
+    window.requestAnimationFrame(loop);
+
+    document.getElementById("webcam-container").appendChild(webcam.canvas);
+    labelContainer = document.getElementById("label-container");
+    for (let i = 0; i < maxPredictions; i++) {
+        const div = document.createElement("div");
+        labelContainer.appendChild(div);
     }
+}
 
-    setInterval(spawnComet, 25000);
+async function loop() {
+    webcam.update();
+    await predict();
+    window.requestAnimationFrame(loop);
+}
 
-    /* ===== Teachable Machine Code ===== */
-    const URL = "./my_model/";
-    let model, webcam, labelContainer, maxPredictions;
+async function predict() {
+    const prediction = await model.predict(webcam.canvas);
 
-    async function init() {
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
+    for (let i = 0; i < prediction.length; i++) {
+        const className = prediction[i].className;
+        const prob = prediction[i].probability.toFixed(2);
+        let statusClass = "neutral";
+        if (className.toLowerCase().includes("good")) statusClass = "good";
+        if (className.toLowerCase().includes("bad")) statusClass = "bad";
 
-        model = await tmImage.load(modelURL, metadataURL);
-        maxPredictions = model.getTotalClasses();
-
-        const flip = true;
-        webcam = new tmImage.Webcam(200, 200, flip);
-        await webcam.setup();
-        await webcam.play();
-        window.requestAnimationFrame(loop);
-
-        document.getElementById("webcam-container").appendChild(webcam.canvas);
-        labelContainer = document.getElementById("label-container");
-
-        for (let i = 0; i < maxPredictions; i++) {
-            const div = document.createElement("div");
-            labelContainer.appendChild(div);
-        }
+        labelContainer.childNodes[i].innerHTML = `
+            <span class="indicator ${statusClass}"></span>
+            ${className}: ${prob}
+        `;
+        labelContainer.childNodes[i].className = statusClass;
     }
-
-    async function loop() {
-        webcam.update();
-        await predict();
-        window.requestAnimationFrame(loop);
-    }
-
-    async function predict() {
-        const prediction = await model.predict(webcam.canvas);
-
-        for (let i = 0; i < prediction.length; i++) {
-            const className = prediction[i].className;
-            const prob = prediction[i].probability.toFixed(2);
-            let statusClass = "neutral";
-
-            if (className.toLowerCase().includes("good")) statusClass = "good";
-            if (className.toLowerCase().includes("bad")) statusClass = "bad";
-
-            labelContainer.childNodes[i].innerHTML = `
-                <span class="indicator ${statusClass}"></span>
-                ${className}: ${prob}
-            `;
-            labelContainer.childNodes[i].className = statusClass;
-        }
-    }
+}
 </script>
 </body>
 </html>
